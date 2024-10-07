@@ -1,5 +1,11 @@
+import sys
+import os
+
+# Dynamically add the project root to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
+import joblib
 from tensorflow import keras
 from keras.models import Sequential
 from keras.layers import Dense
@@ -7,8 +13,9 @@ from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
 from skopt import BayesSearchCV
 from sklearn.decomposition import TruncatedSVD
-from src import data_processing
+from src.data_processing import data_processing
 
+Xtr, Xts, ytr, yts = data_processing() 
 
 def MLP_model(n_layers=1, n_units=16, activation_fn='relu', optimizer='SGD', learning_rate=0.01):
     model = Sequential()
@@ -41,3 +48,7 @@ grid = GridSearchCV(estimator=model, param_grid=param_space, cv=10)
 grid_result = grid.fit(Xtr, ytr)
 print("Best parameters: ", grid_result.best_params_)
 print("Accuracy: ", grid_result.best_score_)
+
+joblib.dump(bayes_result, 'bayes_result.pkl')
+joblib.dump(Xtr, 'Xtr.pkl')
+joblib.dump(ytr, 'ytr.pkl')
