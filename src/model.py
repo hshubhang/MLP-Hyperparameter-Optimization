@@ -12,8 +12,10 @@ from keras.layers import Dense
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
 from skopt import BayesSearchCV
-from sklearn.decomposition import TruncatedSVD
 from src.data_processing import data_processing
+from sklearn.model_selection import cross_val_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 Xtr, Xts, ytr, yts = data_processing() 
 
@@ -49,6 +51,32 @@ grid_result = grid.fit(Xtr, ytr)
 print("Best parameters: ", grid_result.best_params_)
 print("Accuracy: ", grid_result.best_score_)
 
-joblib.dump(bayes_result, 'bayes_result.pkl')
-joblib.dump(Xtr, 'Xtr.pkl')
-joblib.dump(ytr, 'ytr.pkl')
+
+best_model = bayes_result.best_estimator_
+
+print("Starting cross-validation...")
+precision_scores = cross_val_score(best_model, Xtr, ytr, cv=10, scoring='precision', n_jobs=-1)
+recall_scores = cross_val_score(best_model, Xtr, ytr, cv=10, scoring='recall', n_jobs=-1)
+f1_scores = cross_val_score(best_model, Xtr, ytr, cv=10, scoring='f1',n_jobs=-1)
+
+print("Precision: %0.3f (+/- %0.3f)" % (precision_scores.mean(), precision_scores.std() * 2))
+print("Recall: %0.3f (+/- %0.3f)" % (recall_scores.mean(), recall_scores.std() * 2))
+print("F1 Score: %0.3f (+/- %0.3f)" % (f1_scores.mean(), f1_scores.std() * 2))
+
+#Plotting the Scores
+mean_precision = np.mean(precision_scores)
+std_precision = np.std(precision_scores)
+mean_recall = np.mean(recall_scores)
+std_recall = np.std(recall_scores)
+mean_f1 = np.mean(f1_scores)
+std_f1 = np.std(f1_scores)
+labels = ['Precision', 'Recall', 'F1 Score']
+means = [mean_precision, mean_recall, mean_f1]
+stds = [std_precision, std_recall, std_f1]
+color = 'blue'
+capsize = 10
+plt.errorbar(labels, means, yerr=stds, fmt='o', color=color, ecolor=color, capsize=capsize)
+plt.title('Error Bars of Precision, Recall, and F1 Score')
+plt.xlabel('Metric')
+plt.ylabel('Score')
+plt.show()
