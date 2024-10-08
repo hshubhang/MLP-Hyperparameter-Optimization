@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 import joblib
+import numpy as np
 from tensorflow import keras
 from keras.models import Sequential
 from keras.layers import Dense
